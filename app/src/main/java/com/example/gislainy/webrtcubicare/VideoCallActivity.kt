@@ -110,7 +110,7 @@ class VideoCallActivity : AppCompatActivity() {
     }
     private fun onSendCb(chan: DataChannel?) {
         if(chan != null) {
-            channel = chan;
+            listaChannel.add(chan)
             if(!jaEnviouDados)
                 enviarDados()
         };
@@ -124,20 +124,23 @@ class VideoCallActivity : AppCompatActivity() {
         runOnUiThread {
             val text = Date();
             Log.w(TAG, "DataChannel enviarDados")
-            if (channel?.state() == DataChannel.State.OPEN) {
-                val buffer = ByteBuffer.wrap(text.toString().toByteArray())
-                channel?.send(DataChannel.Buffer(buffer, false))
-                Log.w(TAG, "DataChannel enviarDados  Estou enviando == "+ text.toString())
-                remoteTextView?.text = "Estou enviando == " + text.toString()
-                Handler().postDelayed({
-                    enviarDados()
-                }, 1000)
-                jaEnviouDados = true;
-            } else {
-                Handler().postDelayed({
-                    enviarDados()
-                }, 1000);
+            listaChannel.forEach{
+                if (it?.state() == DataChannel.State.OPEN) {
+                    val buffer = ByteBuffer.wrap(text.toString().toByteArray())
+                    it?.send(DataChannel.Buffer(buffer, false))
+                    Log.w(TAG, "DataChannel enviarDados  Estou enviando == "+ text.toString())
+                    remoteTextView?.text = "Estou enviando == " + text.toString()
+                    /* Handler().postDelayed({
+                         enviarDados()
+                     }, 1000)*/
+                    jaEnviouDados = true;
+                } else {
+                    Handler().postDelayed({
+                        enviarDados()
+                    }, 1000);
+                }
             }
+
 
         }
     }

@@ -33,6 +33,8 @@ data class VideoRenderers(private val localView: SurfaceViewRenderer?, private v
 
 class VideoCallSession(
     private val context: Context,
+    private val onMessageCb: (String) -> Unit,
+    private val onSendCb: (DataChannel?) -> Unit,
     private val onStatusChangedListener: (VideoCallStatus) -> Unit,
     private val signaler: SignalingWebSocket,
     private val videoRenderers: VideoRenderers)  {
@@ -45,13 +47,21 @@ class VideoCallSession(
     private val eglBase = EglBase.create()
     private var videoCapturer: VideoCapturer? = null
 
+
+    private var listaPeerConnection: MutableList<PeerConnection?> = mutableListOf();
+    private var listaDataChannel: MutableList<DataChannel?> = mutableListOf();
+    private var listaReceiveChannel: MutableList<DataChannel?> = mutableListOf();
+    private var sendChannel: DataChannel? = null
+    private var receiveChannel: DataChannel? = null
+
     val renderContext: EglBase.Context
         get() = eglBase.eglBaseContext
 
     class SimpleRTCEventHandler (
         private val onIceCandidateCb: (IceCandidate) -> Unit,
         private val onAddStreamCb: (MediaStream) -> Unit,
-        private val onRemoveStreamCb: (MediaStream) -> Unit) : PeerConnection.Observer {
+        private val onRemoveStreamCb: (MediaStream) -> Unit,
+        private val onDataChannelCb: (DataChannel) -> Unit) : PeerConnection.Observer {
 
         override fun onIceCandidate(candidate: IceCandidate?) {
             if(candidate != null) onIceCandidateCb(candidate)
@@ -65,7 +75,13 @@ class VideoCallSession(
             if(stream != null) onRemoveStreamCb(stream)
         }
 
-        override fun onDataChannel(chan: DataChannel?) { Log.w(TAG, "onDataChannel: $chan") }
+        override fun onDataChannel(channel: DataChannel?) {
+            Log.w(TAG, "onDataChannel: $channel")
+            if(channel != null) {
+                onDataChannelCb(channel)
+            };
+
+        }
 
         override fun onIceConnectionReceivingChange(p0: Boolean) { Log.w(TAG, "onIceConnectionReceivingChange: $p0") }
 
@@ -105,8 +121,11 @@ class VideoCallSession(
         constraints.mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
         val rtcCfg = PeerConnection.RTCConfiguration(iceServers)
         rtcCfg.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
-        val rtcEvents = SimpleRTCEventHandler(this::handleLocalIceCandidate, this::addRemoteStream, this::removeRemoteStream)
+        val rtcEvents = SimpleRTCEventHandler(this::handleLocalIceCandidate, this::addRemoteStream, this::removeRemoteStream, this::handleDataChannel)
         peerConnection = factory?.createPeerConnection(rtcCfg, constraints, rtcEvents)
+        sendChannel = peerConnection?.createDataChannel("createDataChannel", DataChannel.Init());
+        sendChannel?.registerObserver(localDataChannelObserver);
+        onSendCb(sendChannel);
         setupMediaDevices()
     }
 
@@ -243,7 +262,60 @@ class VideoCallSession(
             }
         }
     }
+    private fun handleDataChannel(dataChannel: DataChannel) {
+        Log.d(TAG, "DataChannel onStateChange() " + dataChannel!!.state().name)
+        receiveChannel = dataChannel;
+        receiveChannel?.registerObserver(DataChannelObserver);
 
+        //listaReceiveChannel.add(receiveChannel);
+    }
+    internal var DataChannelObserver: DataChannel.Observer = object : DataChannel.Observer{
+        override fun onBufferedAmountChange(l: Long) {
+
+
+        }
+        override fun onStateChange() {
+            Log.d(TAG, "DataChannel remoteDataChannel onStateChange() " + receiveChannel!!.state().name)
+
+        }
+
+        override fun onMessage(buffer: DataChannel.Buffer) {
+            Log.d(TAG, "DataChannel remoteDataChannel onMessage()")
+
+            if (!buffer.binary) {
+                val limit = buffer.data.limit()
+                val datas = ByteArray(limit)
+                buffer.data.get(datas);
+                onMessageCb(String(datas))
+                Log.d(TAG, "DataChannel remoteMessageReceived" + String(datas))
+            }
+        }
+    }
+    internal var localDataChannelObserver: DataChannel.Observer = object : DataChannel.Observer {
+
+        override fun onBufferedAmountChange(l: Long) {
+
+        }
+
+        override fun onStateChange() {
+            Log.d(TAG, " DataChannel localDataChannelObserver onStateChange() " + sendChannel!!.state().name)
+        }
+
+        override fun onMessage(buffer: DataChannel.Buffer) {
+            Log.d(TAG, "DataChannel localDataChannelObserver onMessage()")
+
+            if (!buffer.binary) {
+                val limit = buffer.data.limit()
+                val datas = ByteArray(limit)
+                buffer.data.get(datas)
+
+                Log.d(TAG, "DataChannel localMessageReceived" + String(datas))
+//                localMessageReceived = String(datas)
+
+            }
+
+        }
+    }
 
     fun terminate() {
         signaler.close()
@@ -265,9 +337,9 @@ class VideoCallSession(
 
     companion object {
 
-        fun connect(context: Context, url: String, videoRenderers: VideoRenderers, callback: (VideoCallStatus) -> Unit) : VideoCallSession {
+        fun connect(context: Context, url: String, videoRenderers: VideoRenderers,  onMessageCb: (String) -> Unit, onSendCb: (DataChannel?) -> Unit, callback: (VideoCallStatus) -> Unit) : VideoCallSession {
             val websocketHandler = SignalingWebSocket()
-            val session = VideoCallSession(context, callback, websocketHandler, videoRenderers)
+            val session = VideoCallSession(context, onMessageCb, onSendCb, callback, websocketHandler, videoRenderers)
             val client = OkHttpClient()
             val request = Request.Builder().url(url).build()
             Log.i(TAG, "Connecting to $url")

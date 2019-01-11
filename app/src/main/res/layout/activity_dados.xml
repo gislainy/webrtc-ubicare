@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".DadosActivity">
+
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+    >
+        <TextView
+                android:text="Mensagens"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textMensagens"/>
+        <TextView
+                android:layout_width="match_parent"
+                android:id="@+id/textMensagensConteudo"
+                android:layout_height="208dp"
+                android:text="Localizador (07:55): Está na cozinha\nLocalizador (07:56): Saindo da cozinha\nLocalizador (07:57): Caminhando para a sala\nLocalizador (07:58): Caminhando para o quarto\nLocalizador (07:59): No quarto\nMonitor (08:00): Está na hora de tomar seu remédio\n"/>
+        <TextView
+                android:text="Escreva sua mensagem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView4"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="142dp"
+                android:inputType="none"
+                android:text="Já tomou?"
+                android:ems="10"
+                android:id="@+id/editText2"/>
+        <Button
+                android:text="Enviar "
+                android:layout_width="match_parent"
+                android:layout_height="51dp"
+                android:id="@+id/button"/>
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>

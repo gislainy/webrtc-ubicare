@@ -24,6 +24,8 @@
         </activity>
         <activity android:name=".VideoCallActivity">
         </activity>
+        <activity android:name=".DadosActivity">
+        </activity>
     </application>
 
 </manifest>

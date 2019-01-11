@@ -39,7 +39,7 @@ class VideoCallActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_video_call)
         statusTextView = findViewById(R.id.status_text)
-        remoteTextView = findViewById(R.id.remote_text)
+        //remoteTextView = findViewById(R.id.remote_text)
         localVideoView = findViewById(R.id.pip_video)
         remoteVideoView = findViewById(R.id.remote_video)
 
@@ -127,10 +127,10 @@ class VideoCallActivity : AppCompatActivity() {
             listaChannel.forEach{
                 if (it?.state() == DataChannel.State.OPEN) {
                     val buffer = ByteBuffer.wrap(text.toString().toByteArray())
-                    it?.send(DataChannel.Buffer(buffer, false))
+                    it.send(DataChannel.Buffer(buffer, false))
                     Log.w(TAG, "DataChannel enviarDados  Estou enviando == "+ text.toString())
                     remoteTextView?.text = "Estou enviando == " + text.toString()
-                    /* Handler().postDelayed({
+                    /*Handler().postDelayed({
                          enviarDados()
                      }, 1000)*/
                     jaEnviouDados = true;

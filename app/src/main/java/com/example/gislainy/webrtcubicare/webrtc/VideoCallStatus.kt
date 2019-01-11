@@ -46,7 +46,7 @@ class VideoCallSession(
     private var audioSource : AudioSource? = null
     private val eglBase = EglBase.create()
     private var videoCapturer: VideoCapturer? = null
-
+    
 
     private var listaPeerConnection: MutableList<PeerConnection?> = mutableListOf();
     private var listaDataChannel: MutableList<DataChannel?> = mutableListOf();
@@ -123,10 +123,8 @@ class VideoCallSession(
         rtcCfg.continualGatheringPolicy = PeerConnection.ContinualGatheringPolicy.GATHER_CONTINUALLY
         val rtcEvents = SimpleRTCEventHandler(this::handleLocalIceCandidate, this::addRemoteStream, this::removeRemoteStream, this::handleDataChannel)
         peerConnection = factory?.createPeerConnection(rtcCfg, constraints, rtcEvents)
-        listaPeerConnection.add(peerConnection)
         sendChannel = peerConnection?.createDataChannel("createDataChannel", DataChannel.Init());
         sendChannel?.registerObserver(localDataChannelObserver);
-        listaDataChannel.add(sendChannel)
         onSendCb(sendChannel);
         setupMediaDevices()
     }
@@ -136,7 +134,6 @@ class VideoCallSession(
     }
 
     private fun maybeCreateOffer() {
-        peerConnection = listaPeerConnection.lastOrNull()
         if(isOfferingPeer) {
             peerConnection?.createOffer(SDPCreateCallback(this::createDescriptorCallback), MediaConstraints())
         }
@@ -169,7 +166,6 @@ class VideoCallSession(
         Log.i(TAG, "Got remote ICE candidate $strCandidate")
         executor.execute {
             val candidate = IceCandidate(id, label, strCandidate)
-            peerConnection = listaPeerConnection.lastOrNull()
             peerConnection?.addIceCandidate(candidate)
         }
     }
@@ -205,7 +201,6 @@ class VideoCallSession(
         val audioTrack = factory?.createAudioTrack(AUDIO_TRACK_LABEL, audioSource)
 
         stream?.addTrack(audioTrack)
-        peerConnection = listaPeerConnection.lastOrNull()
         peerConnection?.addStream(stream)
     }
 
@@ -219,7 +214,6 @@ class VideoCallSession(
     }
 
     private fun handleRemoteDescriptor(sdp: String) {
-        peerConnection = listaPeerConnection.lastOrNull()
         if(isOfferingPeer) {
             peerConnection?.setRemoteDescription(SDPSetCallback({ setError ->
                 if(setError != null) {
@@ -240,7 +234,6 @@ class VideoCallSession(
     private fun createDescriptorCallback(result: SDPCreateResult) {
         when(result) {
             is SDPCreateSuccess -> {
-                peerConnection = listaPeerConnection.lastOrNull()
                 peerConnection?.setLocalDescription(SDPSetCallback({ setResult ->
                     Log.i(TAG, "SetLocalDescription: $setResult")
                 }), result.descriptor)
@@ -269,11 +262,10 @@ class VideoCallSession(
         }
     }
     private fun handleDataChannel(dataChannel: DataChannel) {
-        Log.d(TAG, "DataChannel onStateChange() " + dataChannel!!.state().name)
+        Log.d(TAG, "DataChannel onStateChange() " + dataChannel.state().name)
         receiveChannel = dataChannel;
         receiveChannel?.registerObserver(DataChannelObserver);
 
-        listaReceiveChannel.add(receiveChannel);
     }
     internal var DataChannelObserver: DataChannel.Observer = object : DataChannel.Observer{
         override fun onBufferedAmountChange(l: Long) {
@@ -316,7 +308,6 @@ class VideoCallSession(
                 buffer.data.get(datas)
 
                 Log.d(TAG, "DataChannel localMessageReceived" + String(datas))
-//                localMessageReceived = String(datas)
 
             }
 
@@ -333,17 +324,10 @@ class VideoCallSession(
         videoSource?.dispose()
 
         audioSource?.dispose()
-        listaPeerConnection.forEach {
-            it?.dispose()
-        }
-        
-        listaDataChannel.forEach {
-            it?.dispose()
-        }
 
-        listaReceiveChannel.forEach {
-            it?.dispose()
-        }
+        peerConnection?.dispose();
+        receiveChannel?.dispose();
+        sendChannel?.dispose();
 
         factory?.dispose()
 

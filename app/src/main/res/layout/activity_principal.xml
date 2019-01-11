@@ -6,23 +6,55 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".Principal">
-    <Button
-            android:id="@+id/connect_button"
-            style="@style/Widget.AppCompat.Button.Colored"
-            android:layout_width="wrap_content"
+    <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:background="@color/colorConnected"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:text="@string/connect_btn"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintVertical_bias="0.14"
-            tools:text="Connect" />
+    >
+        <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" app:srcCompat="@mipmap/webrtc" android:id="@+id/imageView2"/>
+        <TextView
+                android:text="UbiCare"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                android:layout_gravity="center"
+                android:gravity="center"
+
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1" android:textAlignment="center"
+                android:textStyle="bold" android:textSize="24sp"/>
+        <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="5uDAahzDLZUplZ6My2dxpPGb7h22"
+                android:ems="10"
+                tools:layout_editor_absoluteY="295dp" tools:layout_editor_absoluteX="0dp" android:id="@+id/editText"
+                android:inputType="text" tools:text="5uDAahzDLZUplZ6My2dxpPGb7h22"/>
+        <RadioGroup
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+        >
+            <RadioButton
+                    android:text="Localizador"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:id="@+id/radioLocalizador" android:checked="true"/>
+            <RadioButton
+                    android:text="Monitor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" android:id="@+id/radioMonitor" android:layout_weight="1"
+                    android:checked="true"/>
+        </RadioGroup>
+        <Button
+                android:id="@+id/btnVideo"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="Iniciar conversa por áudio/vídeo"/>
+        <Button
+                android:text="Iniciar troca de  dados"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnDados"
+                app:layout_constraintTop_toBottomOf="@+id/btnVideo"/>
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
